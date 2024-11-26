@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Кликер Игра</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .game-container {
+            text-align: center;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        }
+
+        button {
+            font-size: 18px;
+            padding: 10px 20px;
+            margin: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            border: none;
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        button:disabled {
+            background-color: #ddd;
+            cursor: not-allowed;
+        }
+
+        #upgrades {
+            margin-top: 20px;
+        }
+
+        /* Защита от изменений, скрыть элементы */
+        .blind {
+            display: none;
+        }
+
+        /* Скрыть элементы локально, например, с помощью CSS */
+        #score-container, #upgrades {
+            visibility: visible;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Кликер Игра</h1>
+        <div id="score-container">
+            <p>Очки: <span id="score">0</span></p>
+        </div>
+        <button id="click-button">Кликни меня!</button>
+        
+        <div id="upgrades">
+            <h2>Улучшения</h2>
+            <div id="multi">
+                <p>Мулти (стоимость: <span id="multi-cost">100</span> очков): <span>+2 очка за клик</span></p>
+                <button id="multi-button">Купить Мулти</button>
+            </div>
+            <div id="multi-multi">
+                <p>Мулти-Мулти (стоимость: <span id="multi-multi-cost">200</span> очков): <span>+4 очка за клик</span></p>
+                <button id="multi-multi-button">Купить Мулти-Мулти</button>
+            </div>
+            <div id="factory">
+                <p>Завод (стоимость: <span id="factory-cost">500</span> очков): <span>+10 очков каждые 10 секунд</span></p>
+                <button id="factory-button">Купить Завод</button>
+            </div>
+            <div id="auto-clicker">
+                <p>Автокликер (стоимость: <span id="auto-clicker-cost">100</span> очков): <span>Автоматически кликает каждую секунду</span></p>
+                <button id="auto-clicker-button">Купить Автокликер</button>
+            </div>
+        </div>
+
+        <!-- Скрытые переменные, которые невозможно изменить через инструменты браузера -->
+        <div class="blind">
+            <span id="hidden-data"></span> <!-- Это может быть скрыто от пользователя -->
+        </div>
+    </div>
+
+    <script>
+        // Проверка кода на возможность манипуляций
+        let score = parseInt(localStorage.getItem('score')) || 0;
+        let clickValue = parseInt(localStorage.getItem('clickValue')) || 1;
+        let multiClicker = localStorage.getItem('multiClicker') === 'true';
+        let multiMultiClicker = localStorage.getItem('multiMultiClicker') === 'true';
+        let factory = localStorage.getItem('factory') === 'true';
+        let autoClicker = localStorage.getItem('autoClicker') === 'true';
+        let multiCost = parseInt(localStorage.getItem('multiCost')) || 100;
+        let multiMultiCost = parseInt(localStorage.getItem('multiMultiCost')) || 200;
+        let factoryCost = parseInt(localStorage.getItem('factoryCost')) || 500;
+        let autoClickerCost = parseInt(localStorage.getItem('autoClickerCost')) || 100;
+
+        const scoreElement = document.getElementById('score');
+        const clickButton = document.getElementById('click-button');
+        const multiButton = document.getElementById('multi-button');
+        const multiMultiButton = document.getElementById('multi-multi-button');
+        const factoryButton = document.getElementById('factory-button');
+        const autoClickerButton = document.getElementById('auto-clicker-button');
+        const multiCostElement = document.getElementById('multi-cost');
+        const multiMultiCostElement = document.getElementById('multi-multi-cost');
+        const factoryCostElement = document.getElementById('factory-cost');
+        const autoClickerCostElement = document.getElementById('auto-clicker-cost');
+
+        // Обновление счета
+        function updateScore() {
+            scoreElement.textContent = score;
+            multiCostElement.textContent = multiCost;
+            multiMultiCostElement.textContent = multiMultiCost;
+            factoryCostElement.textContent = factoryCost;
+            autoClickerCostElement.textContent = autoClickerCost;
+
+            // Сохраняем все данные в localStorage
+            localStorage.setItem('score', score);
+            localStorage.setItem('clickValue', clickValue);
+            localStorage.setItem('multiClicker', multiClicker);
+            localStorage.setItem('multiMultiClicker', multiMultiClicker);
+            localStorage.setItem('factory', factory);
+            localStorage.setItem('autoClicker', autoClicker);
+            localStorage.setItem('multiCost', multiCost);
+            localStorage.setItem('multiMultiCost', multiMultiCost);
+            localStorage.setItem('factoryCost', factoryCost);
+            localStorage.setItem('autoClickerCost', autoClickerCost);
+        }
+
+        // Обработчик клика по кнопке
+        clickButton.addEventListener('click', () => {
+            score += clickValue;
+            updateScore();
+        });
+
+        // Покупка Мулти
+        multiButton.addEventListener('click', () => {
+            if (score >= multiCost) {
+                score -= multiCost;
+                clickValue = 2;  // Устанавливаем 2 очка за клик
+                multiClicker = true;
+                multiCost = Math.floor(multiCost * 1.5);  // Увеличиваем стоимость Мулти
+                multiButton.disabled = true;
+                updateScore();
+            }
+        });
+
+        // Покупка Мулти-Мулти
+        multiMultiButton.addEventListener('click', () => {
+            if (score >= multiMultiCost) {
+                score -= multiMultiCost;
+                clickValue = 4;  // Устанавливаем 4 очка за клик
+                multiMultiClicker = true;
+                multiMultiCost = Math.floor(multiMultiCost * 1.5);  // Увеличиваем стоимость Мулти-Мулти
+                multiMultiButton.disabled = true;
+                updateScore();
+            }
+        });
+
+        // Покупка Завода
+        factoryButton.addEventListener('click', () => {
+            if (score >= factoryCost) {
+                score -= factoryCost;
+                factory = true;
+                factoryCost = Math.floor(factoryCost * 1.5);  // Увеличиваем стоимость Завода
+                factoryButton.disabled = true;
+                updateScore();
+            }
+        });
+
+        // Покупка Автокликера
+        autoClickerButton.addEventListener('click', () => {
+            if (score >= autoClickerCost) {
+                score -= autoClickerCost;
+                autoClicker = true;
+                autoClickerCost = Math.floor(autoClickerCost * 1.5);  // Увеличиваем стоимость Автокликера
+                autoClickerButton.disabled = true;
+                updateScore();
+            }
+        });
+
+        // Функция, которая каждый 10 секунд добавляет очки от завода
+        function generateFactoryIncome() {
+            if (factory) {
+                score += 10;
+                updateScore();
+            }
+        }
+
+        // Функция для автокликера (кликает каждую секунду)
+        function autoClick() {
+            if (autoClicker) {
+                score += clickValue;  // Кликает за игрока с текущим значением clickValue
+                updateScore();
+            }
+        }
+
+        // Запуск генерации дохода от завода каждые 10 секунд
+        setInterval(generateFactoryIncome, 10000);
+
+        // Запуск автокликера каждую секунду
+        setInterval(autoClick, 1000);
+
+        // Инициализация
+        updateScore();
+    </script>
+</body>
+</html>
